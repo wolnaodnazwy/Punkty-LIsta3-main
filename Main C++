@@ -1,0 +1,147 @@
+#include <iostream>
+#include <vector>
+#include "Punkt2D.h"
+#include "Punkt3D.h"
+#include "Wektor3D.h"
+#include <cstdlib>
+#include <fstream>
+#include <string>
+
+using namespace std;
+
+int jakiPunkt(string name);
+
+int main() {
+    float x, y, z;
+    char a;
+
+    vector<Punkt2D>Punkty2D;
+    vector<Punkt3D>Punkty3D;
+
+    fstream plik;
+    string name = "lamana3D3.csv";
+    plik.open(name);
+    try
+    {
+        if (plik.good() == 0)
+            throw 0;
+
+        if (jakiPunkt(name) == 2) {
+            while (plik >> x >> a >> y)
+                Punkty2D.push_back(Punkt2D(x, y));
+
+            if (!plik.eof())
+                throw 1;
+        }
+
+        if (jakiPunkt(name) == 3)
+        {
+            while (plik >> x >> a >> y >> a >> z)
+                Punkty3D.push_back(Punkt3D(x, y, z));
+
+            if (!plik.eof())
+                throw 1;
+        }
+        plik.close();
+
+      
+    }
+    catch (int e)
+    {
+        if (e == 0)
+            cout << "Plik nie istnieje lub nie zostal poprawnie otwarty!" << endl;
+        if (e == 1)
+            cout << "Nie zostala podana liczba";
+        if (e == 2)
+            cout << "Nieprawidlowy format nazwy pliku";
+        return 0;
+    }
+    /////////////////////////////////PRZYKLAD UZYCIA WYJATKU Z PUNKT3D/////////////////////////////////    
+    try {
+        Punkt3D przyklad(1, 2, 3);
+        przyklad.Project(7, 3);
+    }
+    catch (exception EX)
+    {
+        cout << EX.what();
+    }
+ ////////////////////////////////////////////////////////////////////////////
+
+        int i = 0, j = 1, k = 2, l;
+
+        if (Punkty2D.empty() == false)
+        { //W przestrzeni 2D wszystkie punkty leza na jednej plaszczynie
+            while (k < Punkty2D.size())
+            {
+                double rownanie1 = (Punkty2D[i].GetY() - Punkty2D[j].GetY()) / (Punkty2D[i].GetX() - Punkty2D[j].GetX());
+                double rownanie2 = (Punkty2D[i].GetY() - Punkty2D[k].GetY()) / (Punkty2D[i].GetX() - Punkty2D[k].GetX());
+                if (rownanie1 == rownanie2)
+                {
+                    i++;
+                    j++;
+                    k++;
+                }
+                else
+                {
+                    Punkty2D[k].Print();
+                    k = Punkty2D.size();
+                }
+
+            }
+        }
+        if (Punkty3D.empty() == false)
+        {
+            while (k < Punkty3D.size())
+            {
+                Wektor3D first = Wektor3D(Punkty3D[i], Punkty3D[j]);
+                Wektor3D second = Wektor3D(Punkty3D[j], Punkty3D[k]);
+                Wektor3D result = Wektor3D(0, 0, 0);
+                if (first.CrossProduct(second) == result) //jesli sa wspoliniowe to przechodzi przez nie plaszczyzna
+                {
+                    i++;
+                    j++;
+                    k++;
+                }
+                else
+                {
+                    if (k > 2) //3 punty zawsze moga lezec na jednej plaszczyznie
+                    {
+                        i--;
+                        j--;
+                        l = k;
+                        k--;
+                        first = Wektor3D(Punkty3D[i], Punkty3D[j]);
+                        second = Wektor3D(Punkty3D[j], Punkty3D[k]);
+                        Wektor3D third = Wektor3D(Punkty3D[k], Punkty3D[l]);
+                        Wektor3D help = first.CrossProduct(third);
+                        if (first.CrossProduct(second) == help) // jesli leza na jednej plaszczyznie i nie sa wpolliniowe
+                        {
+                            i += 2;
+                            j += 2;
+                            k += 2;
+                        }
+                        else //nie sa wspolliniowe i nie leza na jednej plaszczyznie
+                        {
+                            Punkty3D[l].Print();
+                            k = Punkty3D.size();
+                        }
+                    }
+                    else //3 punkt jest niewspolliniowy ale lezy na jednej plaszczyznie
+                    {
+                        i++;
+                        j++;
+                        k++;
+                    }
+                }
+            }
+        }
+   return 0;
+}
+
+
+int jakiPunkt(string name)
+{
+    if (name[6] == '2') return 2;
+    if (name[6] == '3') return 3;
+    else throw 2;
+}
